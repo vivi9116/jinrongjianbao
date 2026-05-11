@@ -110,3 +110,29 @@ def test_alert_mode_skips_when_no_major_move(monkeypatch):
 
     assert result == {"ok": True, "skipped": True, "reason": "no major market move"}
     assert sent == []
+
+
+def test_alert_mode_skips_when_quote_feed_is_rate_limited(monkeypatch):
+    sent = []
+
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "token")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "chat")
+
+    def fake_fetch(session=None):
+        raise RuntimeError("429 Too Many Requests")
+
+    monkeypatch.setattr(financial_brief, "fetch_market_quotes", fake_fetch)
+    monkeypatch.setattr(
+        financial_brief,
+        "send_telegram_message",
+        lambda token, chat_id, text, session=None: sent.append(text),
+    )
+
+    result = financial_brief.run(mode="alert", now_utc="2026-05-12T13:30:00Z")
+
+    assert result == {
+        "ok": True,
+        "skipped": True,
+        "reason": "quote feed unavailable: RuntimeError",
+    }
+    assert sent == []
