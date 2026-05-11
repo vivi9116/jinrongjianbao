@@ -219,7 +219,14 @@ def run(
         raise RuntimeError("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set")
 
     if mode == "alert":
-        quote_rows = fetch_market_quotes(session=session)
+        try:
+            quote_rows = fetch_market_quotes(session=session)
+        except Exception as exc:
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": f"quote feed unavailable: {type(exc).__name__}",
+            }
         reasons = major_move_reasons(quote_rows)
         if not reasons:
             return {"ok": True, "skipped": True, "reason": "no major market move"}
