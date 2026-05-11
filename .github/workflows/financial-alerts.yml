@@ -1,6 +1,14 @@
 name: Financial Major Event Alerts
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/financial_brief.py"
+      - "tests/test_financial_brief.py"
+      - ".github/workflows/financial-alerts.yml"
+      - "requirements*.txt"
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch: {}
