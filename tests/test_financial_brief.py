@@ -136,3 +136,22 @@ def test_alert_mode_skips_when_quote_feed_is_rate_limited(monkeypatch):
         "reason": "quote feed unavailable: RuntimeError",
     }
     assert sent == []
+
+
+def test_main_prints_skip_reason_for_alert_quote_failure(monkeypatch, capsys):
+    monkeypatch.setattr("sys.argv", ["financial_brief.py", "--mode", "alert"])
+    monkeypatch.setattr(
+        financial_brief,
+        "run",
+        lambda mode: {
+            "ok": True,
+            "skipped": True,
+            "reason": "quote feed unavailable: HTTPError",
+        },
+    )
+
+    financial_brief.main()
+
+    output = capsys.readouterr().out
+    assert "telegram_ok=True" in output
+    assert "skipped=True reason=quote feed unavailable: HTTPError" in output
